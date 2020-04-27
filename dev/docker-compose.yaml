@@ -1,0 +1,35 @@
+version: "2.0"
+services:
+  nginx:
+    build:
+      dockerfile: dev/Dockerfile_nginx
+      context: ../
+    image: symfony-messenger-demo-nginx:latest
+    ports:
+      - 8080:80
+    volumes:
+      - ../:/var/www/app
+
+  web.local:
+    build:
+      dockerfile: ./dev/Dockerfile
+      context: ../
+    image: symfony-messenger-demo:latest
+    volumes:
+      - ../:/var/www/app
+
+  consumer.local:
+    image: symfony-messenger-demo:latest
+    depends_on:
+      - web.local
+      - rabbitmq.server.local
+    volumes:
+      - ../:/var/www/app
+    command: /var/www/app/bin/console messenger:consume -vv
+    restart: always
+
+  rabbitmq.server.local:
+    image: rabbitmq:3.7.17-management
+    ports:
+      - 15672:15672
+#    network_mode: host
